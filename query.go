@@ -12,15 +12,6 @@ const selectOneStatement = `SELECT id, first_name, last_name, email, created_at,
 
 const selectAllStatement = `SELECT id, first_name, last_name, email, created_at, updated_at, deleted_at FROM users;`
 
-/*
-   Create Query object type with fields "user" has type [userType] by using GraphQLObjectTypeConfig:
-       - Name: name of object type
-       - Fields: a map of fields by using GraphQLFields
-   Setup type of field use GraphQLFieldConfig to define:
-       - Type: type of field
-       - Args: arguments to query with current field
-       - Resolve: function to query data using params from [Args] and return value with current type
-*/
 var queryType = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "Query",

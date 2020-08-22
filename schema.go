@@ -17,3 +17,18 @@ func init() {
 		},
 	)
 }
+
+// Subscription is the graphql object for subscriptions
+var Subscription = graphql.NewObject(graphql.ObjectConfig{
+	Name: "Subscription",
+	Fields: graphql.Fields{
+		"updatedUser": &graphql.Field{
+			Type: UserType,
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				user := p.Context.Value(UserUpdatedKey)
+				p.Context.Done()
+				return user, nil
+			},
+		},
+	},
+})

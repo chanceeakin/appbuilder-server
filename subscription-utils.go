@@ -3,22 +3,24 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 	"github.com/graphql-go/graphql"
 )
 
-// key is a unique
-type key int
+// SubscriberKey is for unique ctx.Context key/values
+type SubscriberKey int
 
 const (
-	userKey key = iota
+	// UserUpdatedKey is the unique identifier for updated user values
+	UserUpdatedKey SubscriberKey = iota
 )
 
+// ConnectionACKMessage is the sent message to a given socket subscriber
 type ConnectionACKMessage struct {
 	OperationID string `json:"id,omitempty"`
 	Type        string `json:"type"`
@@ -27,6 +29,7 @@ type ConnectionACKMessage struct {
 	} `json:"payload,omitempty"`
 }
 
+// Subscriber is the struct for each individual socket connection
 type Subscriber struct {
 	ID            int
 	Conn          *websocket.Conn
@@ -34,6 +37,7 @@ type Subscriber struct {
 	OperationID   string
 }
 
+// Upgrader converts an http request into a WS connection
 var Upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -43,22 +47,10 @@ var Upgrader = websocket.Upgrader{
 	Subprotocols: []string{"graphql-ws"},
 }
 
+// Subscribers is a map of values which is safe for concurrent usage
 var Subscribers sync.Map
 
-var Subscription = graphql.NewObject(graphql.ObjectConfig{
-	Name: "Subscription",
-	Fields: graphql.Fields{
-		"updatedUser": &graphql.Field{
-			Type: UserType,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				user := p.Context.Value(userKey)
-				p.Context.Done()
-				return user, nil
-			},
-		},
-	},
-})
-
+// SubscriptionHandler covers the http communication for incoming/outgoing websocket connections
 func SubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -83,7 +75,7 @@ func SubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if err != nil {
-				log.Println("failed to read websocket message: %v", err)
+				log.Info("failed to read websocket message: %v", err)
 				return
 			}
 			var msg ConnectionACKMessage
@@ -109,7 +101,8 @@ func SubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 }
 
-func publishUserUpdate(user User) {
+// there's probably a way to do some iota matching on the incoming parameter
+func publishUpdate(UpdateKey SubscriberKey, ctxValue interface{}) {
 	Subscribers.Range(func(key, value interface{}) bool {
 		subscriber, ok := value.(*Subscriber)
 		if !ok {
@@ -118,9 +111,9 @@ func publishUserUpdate(user User) {
 		payload := graphql.Do(graphql.Params{
 			Schema:        schema,
 			RequestString: subscriber.RequestString,
-			Context:       context.WithValue(context.Background(), userKey, user),
+			Context:       context.WithValue(context.Background(), UpdateKey, ctxValue),
 		})
-		fmt.Print("PAYLOAD", payload)
+
 		message, err := json.Marshal(map[string]interface{}{
 			"type":    "data",
 			"id":      subscriber.OperationID,

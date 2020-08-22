@@ -40,7 +40,7 @@ var mutationType = graphql.NewObject(graphql.ObjectConfig{
 				if err != nil {
 					return nil, err
 				}
-				publishUserUpdate(val)
+				publishUpdate(UserUpdatedKey, val)
 				return val, nil
 			},
 		},
@@ -69,14 +69,11 @@ var mutationType = graphql.NewObject(graphql.ObjectConfig{
 				if err != nil {
 					return nil, err
 				}
-				publishUserUpdate(val)
+				publishUpdate(UserUpdatedKey, val)
 				return val, nil
 			},
 		},
 
-		// 	/* Delete product by id
-		// 	   http://localhost:8080/product?query=mutation+_{delete(id:1){id,name,info,price}}
-		// 	*/
 		"deleteUser": &graphql.Field{
 			Type:        graphql.Boolean,
 			Description: "Delete user by id",
@@ -94,27 +91,5 @@ var mutationType = graphql.NewObject(graphql.ObjectConfig{
 				return true, nil
 			},
 		},
-		// "delete": &graphql.Field{
-		// 	Type:        productType,
-		// 	Description: "Delete product by id",
-		// 	Args: graphql.FieldConfigArgument{
-		// 		"id": &graphql.ArgumentConfig{
-		// 			Type: graphql.NewNonNull(graphql.Int),
-		// 		},
-		// 	},
-		// 	Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-		// 		id, _ := params.Args["id"].(int)
-		// 		product := Product{}
-		// 		for i, p := range products {
-		// 			if int64(id) == p.ID {
-		// 				product = products[i]
-		// 				// Remove from product list
-		// 				products = append(products[:i], products[i+1:]...)
-		// 			}
-		// 		}
-
-		// 		return product, nil
-		// 	},
-		// },
 	},
 })
