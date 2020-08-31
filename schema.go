@@ -18,17 +18,31 @@ func init() {
 	)
 }
 
+var queryType = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "Query",
+		Fields: graphql.Fields{
+			"user":     getUser,
+			"users":    getUsers,
+			"messages": getMessages,
+		}})
+
+var mutationType = graphql.NewObject(graphql.ObjectConfig{
+	Name: "Mutation",
+	Fields: graphql.Fields{
+		"createUser":    createUser,
+		"updateUser":    updateUser,
+		"deleteUser":    deleteUser,
+		"createMessage": createMessage,
+		"updateMessage": updateMessage,
+		"deleteMessage": deleteMessage,
+	}})
+
 // Subscription is the graphql object for subscriptions
 var Subscription = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Subscription",
 	Fields: graphql.Fields{
-		"updatedUser": &graphql.Field{
-			Type: UserType,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				user := p.Context.Value(UserUpdatedKey)
-				p.Context.Done()
-				return user, nil
-			},
-		},
+		"updatedUser": updatedUser,
+		"newMessage":  newMessage,
 	},
 })

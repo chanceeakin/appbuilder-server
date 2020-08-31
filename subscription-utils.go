@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -18,6 +19,8 @@ type SubscriberKey int
 const (
 	// UserUpdatedKey is the unique identifier for updated user values
 	UserUpdatedKey SubscriberKey = iota
+	// NewMessageKey is the unique identifier for new messages
+	NewMessageKey
 )
 
 // ConnectionACKMessage is the sent message to a given socket subscriber
@@ -103,6 +106,7 @@ func SubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 
 // there's probably a way to do some iota matching on the incoming parameter
 func publishUpdate(UpdateKey SubscriberKey, ctxValue interface{}) {
+	fmt.Println(UpdateKey)
 	Subscribers.Range(func(key, value interface{}) bool {
 		subscriber, ok := value.(*Subscriber)
 		if !ok {
